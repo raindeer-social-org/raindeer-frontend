@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Play, Download, Share2, ArrowRight, Hash, Calendar, X, BarChart3 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Play, Download, Share2, ArrowRight, Hash, Link2, Loader2, X, BarChart3 } from 'lucide-react'
 import { AnimatedPage, PageWrapper } from '@/components/layout/AnimatedPage'
 import { Navbar } from '@/components/layout/Navbar'
 import { Button, Badge } from '@/components/ui'
@@ -27,7 +27,7 @@ export default function GeneratedOutput() {
   const [caption, setCaption] = useState(GENERATED_CAPTION)
   const [hashtags, setHashtags] = useState(HASHTAGS)
   const [publishMode, setPublishMode] = useState('Post Now')
-  const [publishPlatforms, setPublishPlatforms] = useState(['Instagram'])
+  const [publishPlatforms, setPublishPlatforms] = useState(['Instagram', 'Twitter', 'LinkedIn', 'YouTube'])
   const [isPlaying, setIsPlaying] = useState(false)
 
   function removeTag(tag) {
@@ -234,7 +234,7 @@ export default function GeneratedOutput() {
                   {/* Platform selector */}
                   <div className="text-xs text-brand-muted mb-2">Publish to</div>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {['Instagram', 'TikTok', 'YouTube'].map(p => (
+                    {['Instagram', 'Twitter', 'LinkedIn', 'YouTube'].map(p => (
                       <motion.button key={p} whileTap={{ scale: 0.96 }}
                         onClick={() => togglePlatform(p)}
                         className={cn('transition-all', publishPlatforms.includes(p) ? 'opacity-100' : 'opacity-40 hover:opacity-65')}>
@@ -243,10 +243,12 @@ export default function GeneratedOutput() {
                     ))}
                   </div>
 
-                  <Button fullWidth size="lg" className="group">
-                    {publishMode === 'Save to Drafts' ? 'Save to Drafts' : `${publishMode} on ${publishPlatforms.join(' & ')}`}
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  {/* Per-platform post buttons */}
+                  <AnimatePresence>
+                    {publishPlatforms.map(p => (
+                      <PlatformPostButton key={p} platform={p} publishMode={publishMode} />
+                    ))}
+                  </AnimatePresence>
                 </div>
 
                 {/* Action links */}
@@ -272,5 +274,105 @@ function AlignLeftIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-blue">
       <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>
     </svg>
+  )
+}
+
+const platformActionLabel = {
+  'Post Now':       (p) => `Post on ${p}`,
+  'Schedule':       (p) => `Schedule on ${p}`,
+  'Save to Drafts': ()  => 'Save to Drafts',
+}
+
+const platformPostColors = {
+  Instagram: { from: '#E1306C', to: '#F77737' },
+  Twitter:   { from: '#1D9BF0', to: '#0d7ec7' },
+  LinkedIn:  { from: '#0A66C2', to: '#0050a0' },
+  YouTube:   { from: '#FF0000', to: '#cc0000' },
+}
+
+// phase: 'disconnected' | 'connecting' | 'connected' | 'posted'
+function PlatformPostButton({ platform, publishMode }) {
+  const [phase, setPhase] = useState('disconnected')
+  const colors = platformPostColors[platform] || { from: '#4f6ef7', to: '#3451d1' }
+  const label = platformActionLabel[publishMode]?.(platform) ?? `Post on ${platform}`
+
+  function handleClick() {
+    if (phase === 'disconnected') {
+      // Simulate OAuth connect flow
+      setPhase('connecting')
+      setTimeout(() => setPhase('connected'), 1600)
+    } else if (phase === 'connected') {
+      setPhase('posted')
+      setTimeout(() => setPhase('connected'), 2800)
+    }
+  }
+
+  const isDisconnected = phase === 'disconnected'
+  const isConnecting   = phase === 'connecting'
+  const isPosted       = phase === 'posted'
+
+  return (
+    <motion.button
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      whileHover={!isConnecting ? { scale: 1.015 } : {}}
+      whileTap={!isConnecting ? { scale: 0.97 } : {}}
+      onClick={handleClick}
+      disabled={isConnecting}
+      className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all relative overflow-hidden mb-2"
+      style={isDisconnected || isConnecting ? {
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        color: isConnecting ? '#a0aec0' : '#64748b',
+        cursor: isConnecting ? 'wait' : 'pointer',
+      } : {
+        background: isPosted
+          ? 'linear-gradient(90deg,#22c55e,#16a34a)'
+          : `linear-gradient(90deg,${colors.from},${colors.to})`,
+        boxShadow: isPosted
+          ? '0 0 16px rgba(34,197,94,0.35)'
+          : `0 0 14px ${colors.from}44`,
+        color: 'white',
+      }}
+    >
+      <span className="flex items-center gap-2">
+        {/* Icon */}
+        {isConnecting && (
+          <motion.span animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}>
+            <Loader2 size={14} />
+          </motion.span>
+        )}
+        {isDisconnected && <Link2 size={14} className="opacity-50" />}
+        {!isDisconnected && !isConnecting && !isPosted && <ArrowRight size={14} />}
+        {isPosted && (
+          <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <motion.path
+              d="M5 13l4 4L19 7"
+              stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+              transition={{ duration: 0.4 }}
+            />
+          </motion.svg>
+        )}
+
+        {/* Label */}
+        {isDisconnected && `Connect ${platform} Account`}
+        {isConnecting   && `Connecting to ${platform}…`}
+        {!isDisconnected && !isConnecting && !isPosted && label}
+        {isPosted       && `Posted to ${platform}!`}
+      </span>
+
+      {/* Right side chip */}
+      {isDisconnected && (
+        <span className="text-xs font-normal px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.07)', color: '#94a3b8' }}>
+          Not connected
+        </span>
+      )}
+      {!isDisconnected && !isConnecting && !isPosted && (
+        <span className="text-white/60 text-xs font-normal">{platform}</span>
+      )}
+    </motion.button>
   )
 }

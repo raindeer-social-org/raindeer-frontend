@@ -33,5 +33,5 @@ export const platformColors = {
   LinkedIn:  { bg: 'rgba(10,102,194,0.15)', border: 'rgba(10,102,194,0.4)', text: '#0A66C2', dot: '#0A66C2' },
   YouTube:   { bg: 'rgba(255,0,0,0.12)',    border: 'rgba(255,0,0,0.35)',    text: '#FF0000', dot: '#FF0000' },
   X:         { bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.15)', text: '#F5F7FA', dot: '#F5F7FA' },
-  TikTok:    { bg: 'rgba(0,242,234,0.1)',   border: 'rgba(0,242,234,0.3)',   text: '#00F2EA', dot: '#00F2EA' },
+  Twitter:   { bg: 'rgba(29,155,240,0.12)',  border: 'rgba(29,155,240,0.35)',  text: '#1D9BF0', dot: '#1D9BF0' },
 }
